@@ -30,6 +30,10 @@ class BeastarsMangas:
 		def get(self):
 			self.content=requests.get(self.url).text
 			self.pages=re.findall(self.finderRegex,self.content)
+			if self.pages==[]:
+				self.available=False #not translated
+			else:
+				self.available=True
 
 		def downloadTo(self,dir):
 			try:
@@ -65,5 +69,8 @@ mangas=BeastarsMangas()
 for chapter in range(1,mangas.lastChapter+1):
 	log("getting BeastarsManga object for chapter {}".format(chapter))
 	manga=mangas.manga(chapter)
-	log("downloading manga...")
-	manga.downloadTo("./chapters")
+	if manga.available:
+		log("downloading manga...")
+		manga.downloadTo("./chapters")
+	else:
+		log("manga has not been translated yet!")
