@@ -1,6 +1,7 @@
 import requests
 import re
 from os import mkdir, remove
+from yaml import safe_load,dump
 from datetime import datetime
 from PIL import Image
 from PyPDF2 import PdfFileMerger
@@ -19,68 +20,76 @@ def textRange(textRange):
 			for n in range(int(ranges[n][0]),int(ranges[n][1])+1):
 				yield n
 
+regexes=safe_load(open("Regexes.yaml","r").read())
+
 class BeastarsMangas:
 	def __init__(self):
-		self.chapterRegex=open("ChapterRegex.re",'r').read()
+		self.chapterRegex=regexes["getChapter"]
 		self.url="https://w17.read-beastarsmanga.com/"
 		self.subUrl="manga/beastars-chapter-{}/"
 		self.get()
 
 	def get(self):
 		self.content=requests.get(self.url).text
-		self.lastChapter=int(re.findall(self.chapterRegex,self.content)[0])
+		self.chapters=list(dict.fromkeys(re.findall(self.chapterRegex,self.content)))
 
-	class BeastarsManga:
-		def __init__(self,link,chapter):
-			self.finderRegex=open("GetLink.re",'r').read()
-			self.chapter=chapter
-			self.url=link
-			self.get()
+class BeastarsManga:
+	def __init__(self,link):
+		self.finderRegex=regexes["getImage"]
+		self.titleRegex=regexes["getTitle"]
+		self.nameRegex=regexes["getChapterName"]
+		self.url=link
+		self.get()
 
-		def get(self):
-			self.content=requests.get(self.url).text
-			self.pages=re.findall(self.finderRegex,self.content)
-			if self.pages==[]:
-				self.available=False #not translated
-			else:
-				self.available=True
+	def get(self):
+		self.content=requests.get(self.url).text
+		self.pages=re.findall(self.finderRegex,self.content)
+		self.chapter=re.findall(self.nameRegex,self.url)[0]
+		if self.pages==[]:
+			self.available=False #not translated
+			return
+		else:
+			self.available=True
 
-		def downloadTo(self,dir):
-			try:
-				mkdir(dir)
-			except OSError:
-				pass
+		try:
+			self.title=re.findall(self.titleRegex,self.content)[0]
+		except IndexError:
+			log("could not find title of {}".format(self.chapter))
+			self.title="Beastars Manga, Chapter {}".format(self.chapter.split("-")[-1])
 
-			merger = PdfFileMerger()
-			for page in range(len(self.pages)):
-				pagePage=requests.get(self.pages[page]).content
-				jpgFile="{}/{}.jpg".format(dir,page)
-				pdfFile="{}/{}.pdf".format(dir,page)
-				open(jpgFile,'wb').write(pagePage)
+	def downloadTo(self,dir):
+		try:
+			mkdir(dir)
+		except OSError:
+			pass
 
-				image=Image.open(jpgFile).convert('RGB')
-				image.save(pdfFile)
-				remove(jpgFile)
+		merger = PdfFileMerger()
+		for page in range(len(self.pages)):
+			pagePage=requests.get(self.pages[page]).content
+			jpgFile="{}/{}-{}.jpg".format(dir,self.chapter,page)
+			pdfFile="{}/{}-{}.pdf".format(dir,self.chapter,page)
+			open(jpgFile,'wb').write(pagePage)
 
-				merger.append(pdfFile)
-				remove(pdfFile)
+			image=Image.open(jpgFile).convert('RGB')
+			image.save(pdfFile)
+			remove(jpgFile)
 
-			merger.write("{}/chapter-{}.pdf".format(dir,self.chapter))
-			merger.close()
+			merger.append(pdfFile)
+			remove(pdfFile)
 
-	def manga(self,chapter):
-		if chapter>self.lastChapter or chapter < 1:
-			raise ValueError
-		return self.BeastarsManga(self.url+(self.subUrl.format(chapter)),chapter)
+		merger.write("{}/{}.pdf".format(dir,self.title.replace(" ","_")))
+		merger.close()
 
 log("getting BeastarsMangas object")
 mangas=BeastarsMangas()
 
-for chapter in textRange(input("enter chapters to download! eg. 1-2. 1-{} to download all chapters!\n".format(mangas.lastChapter))):
-	log("getting BeastarsManga object for chapter {}".format(chapter))
-	manga=mangas.manga(chapter)
+nameRegex=regexes["getChapterName"]
+for chapter in mangas.chapters:
+	log("getting BeastarsManga object for chapter {}".format(re.findall(nameRegex,chapter)[0]))
+	manga=BeastarsManga(chapter)
+
 	if manga.available:
-		log("downloading manga...")
+		log("downloading manga '{}'".format(manga.title))
 		manga.downloadTo("./chapters")
 	else:
 		log("manga has not been translated yet!")

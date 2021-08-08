@@ -1,1 +1,0 @@
-(?<=Beastars, Chapter )\d+(?=</a></li><li><a href="https://w17\.read-beastarsmanga.com/manga/beastars-chapter-\d+/">Beastars, Chapter )

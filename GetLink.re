@@ -1,1 +1,0 @@
-(?<=content=")https://1\.bp\.blogspot\.com/[^/]+/[^/]+/[^/]+/[^/]+/s1600/[^/]+.jpg(?=" /><meta property="og:image" )
