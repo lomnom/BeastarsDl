@@ -9,6 +9,16 @@ def log(message): #define logging function to prevent repeated code
 	currentTime = str(datetime.now().time())
 	print("["+currentTime+"] "+message)
 
+def textRange(textRange):
+	ranges=textRange.split(",")
+	for n in range(len(ranges)):
+		ranges[n]=ranges[n].split("-")
+		if len(ranges[n])==1:
+			yield int(ranges[n][0])
+		elif len(ranges[n])==2:
+			for n in range(int(ranges[n][0]),int(ranges[n][1])+1):
+				yield n
+
 class BeastarsMangas:
 	def __init__(self):
 		self.chapterRegex=open("ChapterRegex.re",'r').read()
@@ -66,7 +76,7 @@ class BeastarsMangas:
 log("getting BeastarsMangas object")
 mangas=BeastarsMangas()
 
-for chapter in range(1,mangas.lastChapter+1):
+for chapter in textRange(input("enter chapters to download! eg. 1-2. 1-{} to download all chapters!\n".format(mangas.lastChapter))):
 	log("getting BeastarsManga object for chapter {}".format(chapter))
 	manga=mangas.manga(chapter)
 	if manga.available:
