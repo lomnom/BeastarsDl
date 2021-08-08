@@ -41,21 +41,24 @@ class BeastarsManga:
 		self.url=link
 		self.get()
 
-	def get(self):
-		self.content=requests.get(self.url).text
-		self.pages=re.findall(self.finderRegex,self.content)
-		self.chapter=re.findall(self.nameRegex,self.url)[0]
-		if self.pages==[]:
-			self.available=False #not translated
-			return
-		else:
-			self.available=True
+	def get(self,tries=5):
+		if tries>=1:
+			self.content=requests.get(self.url).text
+			self.pages=re.findall(self.finderRegex,self.content)
+			self.chapter=re.findall(self.nameRegex,self.url)[0]
+			if self.pages==[]:
+				self.available=False #not translated
+				self.get(tries=tries-1)
+				return
+			else:
+				self.available=True
+				try:
+					self.title=re.findall(self.titleRegex,self.content)[0].strip()
+				except IndexError:
+					self.title="Beastars Manga, Chapter {}".format(self.chapter.split("-")[-1])
 
-		try:
-			self.title=re.findall(self.titleRegex,self.content)[0]
-		except IndexError:
-			log("could not find title of {}".format(self.chapter))
-			self.title="Beastars Manga, Chapter {}".format(self.chapter.split("-")[-1])
+		else:
+			self.available=False #not translated
 
 	def downloadTo(self,dir):
 		try:
@@ -66,13 +69,13 @@ class BeastarsManga:
 		merger = PdfFileMerger()
 		for page in range(len(self.pages)):
 			pagePage=requests.get(self.pages[page]).content
-			jpgFile="{}/{}-{}.jpg".format(dir,self.chapter,page)
+			imgFile="{}/{}-{}.{}".format(dir,self.chapter,page,self.pages[page].split(".")[-1])
 			pdfFile="{}/{}-{}.pdf".format(dir,self.chapter,page)
-			open(jpgFile,'wb').write(pagePage)
+			open(imgFile,'wb').write(pagePage)
 
-			image=Image.open(jpgFile).convert('RGB')
+			image=Image.open(imgFile).convert('RGB')
 			image.save(pdfFile)
-			remove(jpgFile)
+			remove(imgFile)
 
 			merger.append(pdfFile)
 			remove(pdfFile)

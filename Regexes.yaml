@@ -1,7 +1,7 @@
 #get link to images
-getImage: (?<=content=")https://1\.bp\.blogspot\.com/[^/]+/[^/]+/[^/]+/[^/]+/s1600/[^/]+.jpg(?=" /><meta property="og:image" )
+getImage: (?<=content=")https://1\.bp\.blogspot\.com/[^/]+/[^/]+/[^/]+/[^/]+/s1600/[^/]+.(?:jpg|png)(?=" /><meta property="og:image" )
 #get title of chapter
-getTitle: (?<=<meta property="og:description" content=")Beastars ?(?:Manga)?, Chapter \d+ ?-? ?(?:(?!  &nbsp;)(?!").)*
+getTitle: (?<=<meta property="og:description" content=")Beastars ?(?:Manga)?, Chapter \d+ ?-? ?(?:(?!&nbsp;)(?!").)*
 #get all chapter links from the front page
 getChapter: https://w17\.read-beastarsmanga.com/manga/beastars-chapter-[\d-]+/
 #chapter short title
