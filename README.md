@@ -3,6 +3,7 @@
   - `requests`
   - `PIL`
   - `PyPDF2`
+  - `pyyaml`
 ## Usage
 Just run it!  
 It will make a file called `chapters` and download every Beastars manga to it!
